@@ -17,18 +17,6 @@ public class CategoriasController : ControllerBase
         _logger = logger;
     }
 
-
-    [HttpGet]
-    // [ServiceFilter(typeof(ApiLoggingFilter))] // Filtro personalizado
-    public async Task<ActionResult<IEnumerable<Categoria>>> Get()
-    {
-        // _logger.LogInformation("# GET api/categoria");
-        
-        var categorias = await _repository.GetAllAsync();
-        return Ok(categorias);
-    }
-
-
     // [HttpGet("produtos")]
     // public async Task<ActionResult<IEnumerable<Categoria>>> GetCategoriasProdutos()
     // {
@@ -37,8 +25,19 @@ public class CategoriasController : ControllerBase
     // }
 
 
+    [HttpGet]
+    // [ServiceFilter(typeof(ApiLoggingFilter))] // Filtro personalizado
+    public async Task<ActionResult<IEnumerable<Categoria>>> GetAll()
+    {
+        // _logger.LogInformation("# GET api/categoria");
+        
+        var categorias = await _repository.GetAllAsync();
+        return Ok(categorias);
+    }
+
+
     [HttpGet("{id:int}", Name = "ObterCategoria")]
-    public async Task<ActionResult<Categoria>> Get(int id)
+    public async Task<ActionResult<Categoria>> GetById(int id)
     {
         var categoria =  await _repository.GetOneAsync(id);
 
@@ -55,7 +54,7 @@ public class CategoriasController : ControllerBase
 
 
     [HttpPost]
-    public ActionResult Post(Categoria categoria)
+    public ActionResult Add(Categoria categoria)
     {
 
         if (categoria is null)
@@ -71,7 +70,7 @@ public class CategoriasController : ControllerBase
 
 
     [HttpPut("{id:int}")]
-    public ActionResult Put(int id, Categoria categoria)
+    public ActionResult Update(int id, Categoria categoria)
     {
         if (id != categoria.CategoriaId) 
         {

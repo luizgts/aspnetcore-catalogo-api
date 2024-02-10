@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
-using CatalogoApi.Context;
 using CatalogoApi.Models;
+using CatalogoApi.Repository;
 
 namespace CatalogoApi.Controllers;
 
@@ -10,53 +10,53 @@ namespace CatalogoApi.Controllers;
 public class ProtudosController : ControllerBase
 {
 
-    private readonly AppDbContext _context;
-    private readonly IConfiguration _config;
+    private readonly IProdutoRepository _repository;
+    // private readonly IConfiguration _config;
 
-    public ProtudosController(AppDbContext context, IConfiguration config)
+    public ProtudosController(IProdutoRepository repository)
     {
-        _context = context;
-        _config = config;
+        _repository = repository;
+        // _config = config;
     }
 
-    [HttpGet("config")]
-    public ActionResult<string> GetConfigs() 
-    {
-        var version = _config["version"];
-        var author = _config["author:name"];
+    // [HttpGet("config")]
+    // public ActionResult<string> GetConfigs() 
+    // {
+    //     var version = _config["version"];
+    //     var author = _config["author:name"];
 
-        return Ok($"Version: {version} | Author: {author}");
-    }
+    //     return Ok($"Version: {version} | Author: {author}");
+    // }
 
     // Otimização com o método AsNoTracking
     // Deve ser utilizado em consultas de leitura
     // O contexto mantem o rastreamento dos objetos em memória adicionando uma sobrecarga ao sistema
     [HttpGet]
-    public ActionResult<IEnumerable<Produto>> Get()
+    public ActionResult<IEnumerable<Produto>> GetAll()
     {
-        var produtos = _context?.Produtos?.AsNoTracking().Take(10).ToList();
+        var produtos = _repository.GetAll().Take(10).AsNoTracking().ToList();
 
         if(produtos is null) {
             return NotFound();
         }
 
-        return produtos;
+        return Ok(produtos);
     }
 
     [HttpGet("{id:int}", Name = "ObterProduto")]
-    public ActionResult<Produto> Get(int id)
+    public ActionResult<Produto> GetById(int id)
     {
-        var produto =  _context?.Produtos?.AsNoTracking().FirstOrDefault(p => p.ProdutoId == id);
+        var produto =  _repository.GetOne(id);
         if(produto is null)
         {
             return NotFound();
         }
 
-        return produto;
+        return Ok(produto);
     }
 
     [HttpPost]
-    public ActionResult Post(Produto produto)
+    public ActionResult Add(Produto produto)
     {
 
         if (produto is null)
@@ -64,39 +64,44 @@ public class ProtudosController : ControllerBase
             return BadRequest();
         }
 
-        _context?.Produtos?.Add(produto);
-        _context?.SaveChanges();
-        // Location Header 
+        var newProduto = _repository.Create(produto);
 
-        return new CreatedAtRouteResult("ObterProduto", new { id = produto.ProdutoId }, produto);
+        // Location Header 
+        return new CreatedAtRouteResult("ObterProduto", new { id = newProduto.ProdutoId }, newProduto);
     }
 
     [HttpPut("{id:int}")]
-    public ActionResult Put(int id, Produto produto)
+    public ActionResult Update(int id, Produto produto)
     {
         if (id != produto.ProdutoId) {
             return BadRequest();
         }
 
-        _context.Entry(produto).State = EntityState.Modified;
-        _context.SaveChanges();
+        var hasUpdated = _repository.Update(produto);
 
-        return Ok(produto);
+        if (hasUpdated)
+        {
+            return Ok(produto);
+        }
+        else
+        {
+            return StatusCode(500);
+        }
+
     }
 
     [HttpDelete("{id:int}")]
     public ActionResult Delete(int id)
     {
-        var produto = _context?.Produtos?.FirstOrDefault(p => p.ProdutoId == id);
-        if (produto is null)
+        var hadDeleted = _repository.Delete(id);
+        
+        if (hadDeleted)
         {
-            return NotFound();
+            return Ok();
         }
 
-        _context?.Produtos?.Remove(produto);
-        _context?.SaveChanges();
+        return StatusCode(500);
 
-        return Ok();
     }
 
 }
