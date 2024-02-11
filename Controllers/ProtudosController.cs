@@ -34,7 +34,7 @@ public class ProtudosController : ControllerBase
     [HttpGet]
     public ActionResult<IEnumerable<Produto>> GetAll()
     {
-        var produtos = _repository.GetAll().Take(10).AsNoTracking().ToList();
+        var produtos = _repository.GetAll();
 
         if(produtos is null) {
             return NotFound();
@@ -43,10 +43,12 @@ public class ProtudosController : ControllerBase
         return Ok(produtos);
     }
 
+
     [HttpGet("{id:int}", Name = "ObterProduto")]
     public ActionResult<Produto> GetById(int id)
     {
-        var produto =  _repository.GetOne(id);
+        var produto =  _repository.Get(p => p.ProdutoId == id);
+
         if(produto is null)
         {
             return NotFound();
@@ -54,6 +56,21 @@ public class ProtudosController : ControllerBase
 
         return Ok(produto);
     }
+
+
+    [HttpGet("categoria/{id:int}")]
+    public ActionResult<IEnumerable<Produto>> GetByCategoria(int id)
+    {
+        var produtos =  _repository.GetProdutosByCategoria(id);
+
+        if(produtos is null)
+        {
+            return NotFound();
+        }
+
+        return Ok(produtos);
+    }
+
 
     [HttpPost]
     public ActionResult Add(Produto produto)
@@ -70,6 +87,7 @@ public class ProtudosController : ControllerBase
         return new CreatedAtRouteResult("ObterProduto", new { id = newProduto.ProdutoId }, newProduto);
     }
 
+
     [HttpPut("{id:int}")]
     public ActionResult Update(int id, Produto produto)
     {
@@ -77,30 +95,25 @@ public class ProtudosController : ControllerBase
             return BadRequest();
         }
 
-        var hasUpdated = _repository.Update(produto);
+        var updatedProduto = _repository.Update(produto);
 
-        if (hasUpdated)
-        {
-            return Ok(produto);
-        }
-        else
-        {
-            return StatusCode(500);
-        }
+        return Ok(updatedProduto);
 
     }
 
     [HttpDelete("{id:int}")]
     public ActionResult Delete(int id)
     {
-        var hadDeleted = _repository.Delete(id);
+        var produto = _repository.Get(p => p.ProdutoId == id);
         
-        if (hadDeleted)
+        if (produto is null)
         {
-            return Ok();
+            return NotFound();
         }
 
-        return StatusCode(500);
+        var deletedProduto = _repository.Delete(produto);
+
+        return Ok(deletedProduto);
 
     }
 

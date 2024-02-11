@@ -27,19 +27,19 @@ public class CategoriasController : ControllerBase
 
     [HttpGet]
     // [ServiceFilter(typeof(ApiLoggingFilter))] // Filtro personalizado
-    public async Task<ActionResult<IEnumerable<Categoria>>> GetAll()
+    public ActionResult<IEnumerable<Categoria>> GetAll()
     {
         // _logger.LogInformation("# GET api/categoria");
         
-        var categorias = await _repository.GetAllAsync();
+        var categorias = _repository.GetAll();
         return Ok(categorias);
     }
 
 
     [HttpGet("{id:int}", Name = "ObterCategoria")]
-    public async Task<ActionResult<Categoria>> GetById(int id)
+    public ActionResult<Categoria> GetById(int id)
     {
-        var categoria =  await _repository.GetOneAsync(id);
+        var categoria = _repository.Get(p => p.CategoriaId == id);
 
         // _logger.LogInformation($"# GET api/categoria/produtos/{id}");
 
@@ -84,16 +84,16 @@ public class CategoriasController : ControllerBase
 
 
     [HttpDelete("{id:int}")]
-    public async Task<ActionResult> Delete(int id)
+    public ActionResult Delete(int id)
     {
-        var categoria = await _repository.GetOneAsync(id);
+        var categoria = _repository.Get(c => c.CategoriaId == id);
 
         if (categoria is null)
         {
             return NotFound();
         }
 
-        var deletedCategoria = _repository.Delete(id);
+        var deletedCategoria = _repository.Delete(categoria);
 
         return Ok(deletedCategoria);
     }
