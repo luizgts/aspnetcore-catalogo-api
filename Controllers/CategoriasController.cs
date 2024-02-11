@@ -8,12 +8,12 @@ using CatalogoApi.Repository;
 [Route("api/[controller]")]
 public class CategoriasController : ControllerBase
 {
-    private readonly ICategoriaRepository _repository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger _logger;
 
-    public CategoriasController(ICategoriaRepository repository, ILogger<CategoriasController> logger)
+    public CategoriasController(IUnitOfWork unitOfWork, ILogger<CategoriasController> logger)
     {
-        _repository = repository;
+        _unitOfWork = unitOfWork;
         _logger = logger;
     }
 
@@ -31,7 +31,7 @@ public class CategoriasController : ControllerBase
     {
         // _logger.LogInformation("# GET api/categoria");
         
-        var categorias = _repository.GetAll();
+        var categorias = _unitOfWork.CategoriaRepository.GetAll();
         return Ok(categorias);
     }
 
@@ -39,7 +39,7 @@ public class CategoriasController : ControllerBase
     [HttpGet("{id:int}", Name = "ObterCategoria")]
     public ActionResult<Categoria> GetById(int id)
     {
-        var categoria = _repository.Get(p => p.CategoriaId == id);
+        var categoria = _unitOfWork.CategoriaRepository.Get(p => p.CategoriaId == id);
 
         // _logger.LogInformation($"# GET api/categoria/produtos/{id}");
 
@@ -62,7 +62,8 @@ public class CategoriasController : ControllerBase
             return BadRequest();
         }
 
-        var newCategoria = _repository.Create(categoria);
+        var newCategoria = _unitOfWork.CategoriaRepository.Create(categoria);
+        _unitOfWork.Commit();
         
         // Location Header 
         return new CreatedAtRouteResult("ObterCategoria", new { id = newCategoria.CategoriaId }, newCategoria);
@@ -77,7 +78,8 @@ public class CategoriasController : ControllerBase
             return BadRequest();
         }
 
-        var updatedCategoria = _repository.Update(categoria);
+        var updatedCategoria = _unitOfWork.CategoriaRepository.Update(categoria);
+        _unitOfWork.Commit();
 
         return Ok(updatedCategoria);
     }
@@ -86,14 +88,15 @@ public class CategoriasController : ControllerBase
     [HttpDelete("{id:int}")]
     public ActionResult Delete(int id)
     {
-        var categoria = _repository.Get(c => c.CategoriaId == id);
+        var categoria = _unitOfWork.CategoriaRepository.Get(c => c.CategoriaId == id);
 
         if (categoria is null)
         {
             return NotFound();
         }
 
-        var deletedCategoria = _repository.Delete(categoria);
+        var deletedCategoria = _unitOfWork.CategoriaRepository.Delete(categoria);
+        _unitOfWork.Commit();
 
         return Ok(deletedCategoria);
     }

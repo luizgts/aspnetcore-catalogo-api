@@ -10,12 +10,12 @@ namespace CatalogoApi.Controllers;
 public class ProtudosController : ControllerBase
 {
 
-    private readonly IProdutoRepository _repository;
+    private readonly IUnitOfWork _unitOfWork;
     // private readonly IConfiguration _config;
 
-    public ProtudosController(IProdutoRepository repository)
+    public ProtudosController(IUnitOfWork unitOfWork)
     {
-        _repository = repository;
+        _unitOfWork = unitOfWork;
         // _config = config;
     }
 
@@ -34,7 +34,7 @@ public class ProtudosController : ControllerBase
     [HttpGet]
     public ActionResult<IEnumerable<Produto>> GetAll()
     {
-        var produtos = _repository.GetAll();
+        var produtos = _unitOfWork.ProdutoRepository.GetAll();
 
         if(produtos is null) {
             return NotFound();
@@ -47,7 +47,7 @@ public class ProtudosController : ControllerBase
     [HttpGet("{id:int}", Name = "ObterProduto")]
     public ActionResult<Produto> GetById(int id)
     {
-        var produto =  _repository.Get(p => p.ProdutoId == id);
+        var produto =  _unitOfWork.ProdutoRepository.Get(p => p.ProdutoId == id);
 
         if(produto is null)
         {
@@ -61,7 +61,7 @@ public class ProtudosController : ControllerBase
     [HttpGet("categoria/{id:int}")]
     public ActionResult<IEnumerable<Produto>> GetByCategoria(int id)
     {
-        var produtos =  _repository.GetProdutosByCategoria(id);
+        var produtos =  _unitOfWork.ProdutoRepository.GetProdutosByCategoria(id);
 
         if(produtos is null)
         {
@@ -81,7 +81,8 @@ public class ProtudosController : ControllerBase
             return BadRequest();
         }
 
-        var newProduto = _repository.Create(produto);
+        var newProduto = _unitOfWork.ProdutoRepository.Create(produto);
+        _unitOfWork.Commit();
 
         // Location Header 
         return new CreatedAtRouteResult("ObterProduto", new { id = newProduto.ProdutoId }, newProduto);
@@ -95,7 +96,8 @@ public class ProtudosController : ControllerBase
             return BadRequest();
         }
 
-        var updatedProduto = _repository.Update(produto);
+        var updatedProduto = _unitOfWork.ProdutoRepository.Update(produto);
+        _unitOfWork.Commit();
 
         return Ok(updatedProduto);
 
@@ -104,14 +106,15 @@ public class ProtudosController : ControllerBase
     [HttpDelete("{id:int}")]
     public ActionResult Delete(int id)
     {
-        var produto = _repository.Get(p => p.ProdutoId == id);
+        var produto = _unitOfWork.ProdutoRepository.Get(p => p.ProdutoId == id);
         
         if (produto is null)
         {
             return NotFound();
         }
 
-        var deletedProduto = _repository.Delete(produto);
+        var deletedProduto = _unitOfWork.ProdutoRepository.Delete(produto);
+        _unitOfWork.Commit();
 
         return Ok(deletedProduto);
 

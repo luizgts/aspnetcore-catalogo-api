@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using CatalogoApi.Context;
+using Microsoft.EntityFrameworkCore;
 
 namespace CatalogoApi.Repository;
 
@@ -16,7 +17,7 @@ public class Repository<T> : IRepository<T> where T : class
 
     public IEnumerable<T> GetAll()
     {
-        return _db.Set<T>().ToList();
+        return _db.Set<T>().AsNoTracking().ToList();
     }
 
 
@@ -29,14 +30,14 @@ public class Repository<T> : IRepository<T> where T : class
     public T Create(T entity)
     {
         _db.Set<T>().Add(entity);
-        _db.SaveChanges();
+        // _db.SaveChanges();
         return entity;
     }
 
     public T Update(T entity)
     {
         _db.Set<T>().Update(entity);
-        _db.SaveChanges();
+        // _db.SaveChanges();
         return entity;
     }
 
@@ -44,7 +45,7 @@ public class Repository<T> : IRepository<T> where T : class
     public T Delete(T entity)
     {
         _db.Set<T>().Remove(entity);
-        _db.SaveChanges();
+        // _db.SaveChanges();
         return entity;
     }
     
