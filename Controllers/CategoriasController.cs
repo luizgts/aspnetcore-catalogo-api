@@ -4,6 +4,7 @@ using CatalogoApi.Models;
 using CatalogoApi.Filters;
 using CatalogoApi.Repository;
 using CatalogoApi.DTOs;
+using CatalogoApi.DTOs.Mapping;
 
 namespace CatalogoApi.Controllers;
 
@@ -38,15 +39,8 @@ public class CategoriasController : ControllerBase
 
         if(categorias is null)
             return NotFound();
-        
-        var categoriasDTO = categorias.Select(categoria => new CategoriaDTO()
-        {
-            CategoriaId = categoria.CategoriaId,
-            Nome = categoria.Nome,
-            ImagemUrl = categoria.ImagemUrl
-        });
 
-        return Ok(categoriasDTO);
+        return Ok(categorias.ToDTOList());
     }
 
 
@@ -63,12 +57,7 @@ public class CategoriasController : ControllerBase
             return NotFound("Categoria não encontrada");
         }
 
-        var categoriaDTO = new CategoriaDTO()
-        {
-            CategoriaId = categoria.CategoriaId,
-            Nome = categoria.Nome,
-            ImagemUrl = categoria.ImagemUrl
-        };
+        var categoriaDTO = categoria.ToDTO();
 
         return Ok(categoriaDTO);
     }
@@ -83,22 +72,12 @@ public class CategoriasController : ControllerBase
             return BadRequest();
         }
 
-        var categoria = new Categoria()
-        {
-            CategoriaId = categoriaDTO.CategoriaId,
-            Nome = categoriaDTO.Nome,
-            ImagemUrl = categoriaDTO.ImagemUrl
-        };
+        var categoria = categoriaDTO.ToModel() ?? new Categoria();
 
         var newCategoria = _unitOfWork.CategoriaRepository.Create(categoria);
         _unitOfWork.Commit();
 
-        var newCategoriaDTO = new CategoriaDTO()
-        {
-            CategoriaId = newCategoria.CategoriaId,
-            Nome = newCategoria.Nome,
-            ImagemUrl = newCategoria.ImagemUrl
-        };
+        var newCategoriaDTO = newCategoria.ToDTO() ?? new CategoriaDTO();
         
         // Location Header 
         return new CreatedAtRouteResult("ObterCategoria", new { id = newCategoriaDTO.CategoriaId }, newCategoriaDTO);
@@ -113,22 +92,12 @@ public class CategoriasController : ControllerBase
             return BadRequest();
         }
 
-        var categoria = new Categoria()
-        {
-            CategoriaId = categoriaDTO.CategoriaId,
-            Nome = categoriaDTO.Nome,
-            ImagemUrl = categoriaDTO.ImagemUrl
-        };
+        var categoria = categoriaDTO.ToModel() ?? new Categoria();
 
         var updatedCategoria = _unitOfWork.CategoriaRepository.Update(categoria);
         _unitOfWork.Commit();
 
-        var updatedCategoriaDTO = new CategoriaDTO()
-        {
-            CategoriaId = updatedCategoria.CategoriaId,
-            Nome = updatedCategoria.Nome,
-            ImagemUrl = updatedCategoria.ImagemUrl
-        };
+        var updatedCategoriaDTO = updatedCategoria.ToDTO() ?? new CategoriaDTO();
 
         return Ok(updatedCategoriaDTO);
     }
@@ -147,12 +116,7 @@ public class CategoriasController : ControllerBase
         var deletedCategoria = _unitOfWork.CategoriaRepository.Delete(categoria);
         _unitOfWork.Commit();
 
-        var deletedCategoriaDTO = new CategoriaDTO()
-        {
-            CategoriaId = deletedCategoria.CategoriaId,
-            Nome = deletedCategoria.Nome,
-            ImagemUrl = deletedCategoria.ImagemUrl
-        };
+        var deletedCategoriaDTO = deletedCategoria.ToDTO();
 
         return Ok(deletedCategoriaDTO);
     }
