@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using CatalogoApi.Context;
+using CatalogoApi.DTOs.Mapping;
 using CatalogoApi.Extensions;
 using CatalogoApi.Filter;
 using CatalogoApi.Filters;
@@ -19,29 +20,34 @@ var hosts = builder.Configuration["AllowedHosts"];
 builder.Services.AddDbContext<AppDbContext>(options => 
     options.UseMySql( mySqlConnection, ServerVersion.AutoDetect(mySqlConnection)));
 
-// Registrar o filtro de exceções de forma global
-// Resolve o problema da referência cíclica durante a serialização do JSON
+// Habilita o filtro de exceções Global
+// Habilita a correção da referência cíclica durante a serialização do JSON
+// Habilita o suporte ao JSON Patch
 builder.Services
     .AddControllers(options => options.Filters.Add(typeof(ApiExceptionFilter)))
-    .AddJsonOptions(options => options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
+    .AddJsonOptions(options => options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles)
+    .AddNewtonsoftJson();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Registrando um filtro personalizado
+// Habilita filtro personalizado
 builder.Services.AddScoped<ApiLoggingFilter>();
 
-// Registrando o Logger personalizado
+// Habilita Logger personalizado
 builder.Logging.AddProvider(new CustomLoggerProvider(new CustomLoggerProviderConfiguration {
     LogLevel = LogLevel.Information
 }));
 
-// Registro do serviço de repositório
+// Habilita o serviço de repositório
 builder.Services.AddScoped<ICategoriaRepository, CategoriaRepository>();
 builder.Services.AddScoped<IProdutoRepository, ProdutoRepository>();
 // builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+// Habilita o AutoMapper
+builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
 
 var app = builder.Build();
 
