@@ -5,6 +5,9 @@ using CatalogoApi.Filters;
 using CatalogoApi.Repository;
 using CatalogoApi.DTOs;
 using CatalogoApi.DTOs.Mapping;
+using CatalogoApi.Pagination;
+using Newtonsoft.Json;
+using AutoMapper;
 
 namespace CatalogoApi.Controllers;
 
@@ -15,10 +18,13 @@ public class CategoriasController : ControllerBase
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger _logger;
 
-    public CategoriasController(IUnitOfWork unitOfWork, ILogger<CategoriasController> logger)
+    private readonly IMapper _mapper;
+
+    public CategoriasController(IUnitOfWork unitOfWork, ILogger<CategoriasController> logger, IMapper mapper)
     {
         _unitOfWork = unitOfWork;
         _logger = logger;
+        _mapper = mapper;
     }
 
     // [HttpGet("produtos")]
@@ -28,6 +34,44 @@ public class CategoriasController : ControllerBase
     //     return await _context.Categorias.Include(p => p.Produtos).ToListAsync();
     // }
 
+    [HttpGet("pagination")]
+    public ActionResult<IEnumerable<CategoriaDTO>> GetByFilters([FromQuery] CategoriasParameters categoriasParameters)
+    {
+        var categorias = _unitOfWork.CategoriaRepository.GetCategoriasByFilters(categoriasParameters);
+
+        return ObterCategorias(categorias);
+    }
+
+    [HttpGet("filter/nome/pagination")]
+    public ActionResult<IEnumerable<CategoriaDTO>> GetByFiltersNome([FromQuery] CategoriasFilterNome categoriasFilterNome)
+    {
+        var categorias = _unitOfWork.CategoriaRepository
+            .GetCategoriasByNome(categoriasFilterNome);
+
+        return ObterCategorias(categorias);
+    }
+
+    private ActionResult<IEnumerable<CategoriaDTO>> ObterCategorias(PagedList<Categoria>? categorias)
+    {
+        if (categorias is null)
+            return NotFound();
+
+        var metadata = new
+        {
+            categorias.TotalCount,
+            categorias.PageSize,
+            categorias.CurrentPage,
+            categorias.TotalPages,
+            categorias.HasNext,
+            categorias.HasPrevious
+        };
+
+        Response.Headers.Append("X-Pagination", JsonConvert.SerializeObject(metadata));
+
+        var categoriaDTO = _mapper.Map<IEnumerable<CategoriaDTO>>(categorias);
+
+        return Ok(categoriaDTO);
+    }
 
     [HttpGet]
     // [ServiceFilter(typeof(ApiLoggingFilter))] // Filtro personalizado
