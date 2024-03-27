@@ -38,9 +38,9 @@ public class UnitOfWork : IUnitOfWork
         }
     }
 
-    public void Commit()
+    public async Task CommitAsync()
     {
-        _db.SaveChanges();
+        await _db.SaveChangesAsync();
     }
 
     public void Dispose()
